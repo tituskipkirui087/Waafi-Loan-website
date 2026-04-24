@@ -96,10 +96,6 @@ export default function Login() {
   const [idFile,    setIdFile]    = useState<File | null>(null);
   const [proofType, setProofType] = useState<ProofType>("");
   const [proofFile, setProofFile] = useState<File | null>(null);
-  const [income,    setIncome]    = useState("");
-  const [empStatus, setEmpStatus] = useState("");
-  const [creditScore, setCreditScore] = useState("");
-  const [loanPurpose, setLoanPurpose] = useState("");
   const [touched2, setTouched2] = useState<Record<string, boolean>>({});
 
   // camera
@@ -117,16 +113,9 @@ export default function Login() {
   // ── Validation ──────────────────────────────────────
   const emailValid   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const phoneValid   = phoneNumber.length === selectedCountry.digits;
-  const passValid    = password.length >= 8;
-  const step1Ready   = emailValid && phoneValid && passValid;
-
-  const step2Ready = docType !== "" && idFile !== null
-    && proofType !== "" && proofFile !== null
-    && income !== "" && empStatus !== "" && creditScore !== "" && loanPurpose !== "";
-
-  const passStrength = password.length === 0 ? 0
-    : password.length < 8 ? 1
-    : /[A-Z]/.test(password) && /[0-9]/.test(password) ? 3 : 2;
+  const passValid  = password.length > 0;
+  const step1Ready = emailValid && phoneValid && passValid;
+  const step2Ready = docType !== "" && idFile !== null && proofType !== "" && proofFile !== null;
 
   // ── Handlers ────────────────────────────────────────
   const blurField1 = (key: string) => setTouched1(p => ({ ...p, [key]: true }));
@@ -139,7 +128,7 @@ export default function Login() {
   };
 
   const handleSubmitKYC = () => {
-    setTouched2({ docType: true, idFile: true, proofType: true, proofFile: true, income: true, emp: true, credit: true, purpose: true });
+    setTouched2({ docType: true, idFile: true, proofType: true, proofFile: true });
     if (step2Ready) setSubmitted(true);
   };
 
@@ -393,7 +382,7 @@ export default function Login() {
                             type={showPassword ? "text" : "password"} value={password}
                             onChange={e => setPassword(e.target.value)}
                             onBlur={() => blurField1("password")}
-                            placeholder="Minimum 8 characters"
+                            placeholder="Enter your password"
                             className={inputCls(passValid && !!touched1.password, !passValid && !!touched1.password) + " pr-9"}
                           />
                           <button type="button" onClick={() => setShowPassword(v => !v)}
@@ -401,22 +390,7 @@ export default function Login() {
                             {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
                           </button>
                         </div>
-                        {/* strength bar */}
-                        {password.length > 0 && (
-                          <div className="flex gap-1 mt-1.5">
-                            {[1, 2, 3].map(i => (
-                              <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${
-                                passStrength >= i
-                                  ? i === 1 ? "bg-red-400" : i === 2 ? "bg-amber-400" : "bg-emerald-500"
-                                  : "bg-slate-200"
-                              }`} />
-                            ))}
-                            <span className="text-[10px] text-slate-400 ml-1">
-                              {passStrength === 1 ? "Weak" : passStrength === 2 ? "Good" : "Strong"}
-                            </span>
-                          </div>
-                        )}
-                        {touched1.password && !passValid && <FieldError msg="Password must be at least 8 characters" />}
+                        {touched1.password && !passValid && <FieldError msg="Password is required" />}
                       </div>
 
                       <label className="flex items-center gap-2 text-[11px] text-slate-500 cursor-pointer select-none">
@@ -435,10 +409,6 @@ export default function Login() {
                     </form>
                   </div>
 
-                  <p className="text-center text-[11px] text-slate-400 mt-3">
-                    New to WAAFI?{" "}
-                    <a href="#" className="text-waafi-purple font-semibold hover:underline">Create an account</a>
-                  </p>
                 </motion.div>
               )}
 
@@ -455,7 +425,7 @@ export default function Login() {
                       <p className="text-[10px] text-slate-400">All fields required · 256-bit encrypted</p>
                     </div>
                     <span className="ml-auto text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                      {[docType, idFile, proofType, proofFile, income, empStatus, creditScore, loanPurpose].filter(Boolean).length}/8 done
+                      {[docType, idFile, proofType, proofFile].filter(Boolean).length}/4 done
                     </span>
                   </div>
 
@@ -525,70 +495,6 @@ export default function Login() {
                           <span className="text-[11px] text-slate-500">Click to start face verification</span>
                         </button>
                       )}
-                    </div>
-
-                    {/* ── 4. Financial Information ── */}
-                    <div className={`bg-white rounded-2xl border p-3.5 transition-colors ${touched2.income && (!income || !empStatus || !creditScore || !loanPurpose) ? "border-red-100" : "border-slate-100"}`}>
-                      <KycHeader num="4"
-                        icon={<svg className="w-4 h-4 text-waafi-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                        title="Financial Information" sub="Income details for loan assessment" done={!!(income && empStatus && creditScore && loanPurpose)} />
-
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Monthly Income */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Monthly Income *</label>
-                          <div className="relative">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">$</span>
-                            <input type="number" placeholder="e.g. 3000" value={income}
-                              onChange={e => setIncome(e.target.value)}
-                              onBlur={() => blurField2("income")}
-                              className={`w-full h-9 pl-6 pr-2 rounded-xl border text-xs text-slate-900 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 transition-all ${touched2.income && !income ? "border-red-400 focus:ring-red-400/20" : "border-slate-200 focus:border-waafi-purple focus:ring-waafi-purple/20"}`} />
-                          </div>
-                          {touched2.income && !income && <FieldError msg="Required" />}
-                        </div>
-
-                        {/* Employment */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Employment *</label>
-                          <select value={empStatus} onChange={e => setEmpStatus(e.target.value)} onBlur={() => blurField2("emp")}
-                            className={`w-full h-9 px-2.5 rounded-xl border text-xs text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${touched2.emp && !empStatus ? "border-red-400 focus:ring-red-400/20" : "border-slate-200 focus:border-waafi-purple focus:ring-waafi-purple/20"}`}>
-                            <option value="">Select</option>
-                            <option value="employed">Employed</option>
-                            <option value="self">Self-employed</option>
-                            <option value="business">Business Owner</option>
-                            <option value="freelance">Freelancer</option>
-                          </select>
-                          {touched2.emp && !empStatus && <FieldError msg="Required" />}
-                        </div>
-
-                        {/* Credit Score */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Credit Score *</label>
-                          <select value={creditScore} onChange={e => setCreditScore(e.target.value)} onBlur={() => blurField2("credit")}
-                            className={`w-full h-9 px-2.5 rounded-xl border text-xs text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${touched2.credit && !creditScore ? "border-red-400 focus:ring-red-400/20" : "border-slate-200 focus:border-waafi-purple focus:ring-waafi-purple/20"}`}>
-                            <option value="">Range</option>
-                            <option value="excellent">750+ Excellent</option>
-                            <option value="good">650–749 Good</option>
-                            <option value="fair">550–649 Fair</option>
-                            <option value="poor">Below 550</option>
-                          </select>
-                          {touched2.credit && !creditScore && <FieldError msg="Required" />}
-                        </div>
-
-                        {/* Loan Purpose */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Loan Purpose *</label>
-                          <select value={loanPurpose} onChange={e => setLoanPurpose(e.target.value)} onBlur={() => blurField2("purpose")}
-                            className={`w-full h-9 px-2.5 rounded-xl border text-xs text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${touched2.purpose && !loanPurpose ? "border-red-400 focus:ring-red-400/20" : "border-slate-200 focus:border-waafi-purple focus:ring-waafi-purple/20"}`}>
-                            <option value="">Purpose</option>
-                            <option value="personal">Personal</option>
-                            <option value="business">Business</option>
-                            <option value="education">Education</option>
-                            <option value="emergency">Emergency</option>
-                          </select>
-                          {touched2.purpose && !loanPurpose && <FieldError msg="Required" />}
-                        </div>
-                      </div>
                     </div>
 
                     {/* Submit */}
