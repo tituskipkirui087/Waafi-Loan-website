@@ -8,7 +8,7 @@ export default function Eligibility() {
 
   const handleStartApplication = (loanData: any) => {
     setLoanData(loanData);
-    navigate("/loan-preview");
+    navigate("/calculator");
   };
 
   return (

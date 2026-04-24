@@ -10,19 +10,19 @@
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 263 70% 58%;
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
     --secondary: 168 76% 40%;
     --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent: 263 70% 95%;
-    --accent-foreground: 263 70% 40%;
+    --accent: 142 76% 95%;
+    --accent-foreground: 142 76% 25%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 263 70% 58%;
+    --ring: 142 76% 36%;
     --radius: 1.25rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 222 47% 11%;
@@ -50,19 +50,19 @@
 
 @layer utilities {
   .card-shadow {
-    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 4px 24px rgba(22, 163, 74, 0.08);
   }
 
   .card-shadow-hover {
-    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 8px 32px rgba(22, 163, 74, 0.18);
   }
 
   .btn-shadow {
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.30);
   }
 
   .gradient-purple-teal {
-    background: linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%);
+    background: linear-gradient(135deg, #16a34a 0%, #14B8A6 100%);
   }
 
   .gradient-subtle {
@@ -178,7 +178,7 @@
     height: 20px;
     border-radius: 50%;
     background: white;
-    border: 2px solid #8B5CF6;
+    border: 2px solid #16a34a;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     cursor: pointer;
     transition: transform 0.15s ease;
@@ -193,7 +193,7 @@
     height: 20px;
     border-radius: 50%;
     background: white;
-    border: 2px solid #8B5CF6;
+    border: 2px solid #16a34a;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     cursor: pointer;
   }

@@ -73,7 +73,7 @@ export default function LoanPreview() {
                       <div className="flex gap-2">
                         <button
                           onClick={handleAmountSave}
-                          className="px-4 py-1 bg-waafi-purple text-white text-sm rounded-lg hover:bg-[#7C3AED] transition-colors cursor-pointer"
+                          className="px-4 py-1 bg-waafi-purple text-white text-sm rounded-lg hover:bg-[#15803d] transition-colors cursor-pointer"
                         >
                           Save
                         </button>
@@ -94,7 +94,7 @@ export default function LoanPreview() {
                       <p className="text-2xl font-bold text-slate-900">{formatCurrency(loanData.amount)}</p>
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="text-waafi-purple hover:text-[#7C3AED] transition-colors cursor-pointer"
+                        className="text-waafi-purple hover:text-[#15803d] transition-colors cursor-pointer"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -142,16 +142,16 @@ export default function LoanPreview() {
           <div className="mt-8 space-y-4">
             <Link 
               to="/login" 
-              className="w-full h-[52px] bg-waafi-purple hover:bg-[#7C3AED] text-white font-semibold rounded-2xl btn-shadow transition-colors duration-200 cursor-pointer flex items-center justify-center"
+              className="w-full h-[52px] bg-waafi-purple hover:bg-[#15803d] text-white font-semibold rounded-2xl btn-shadow transition-colors duration-200 cursor-pointer flex items-center justify-center"
             >
               Confirm and Proceed to Login
             </Link>
             
-            <Link 
-              to="/" 
+            <Link
+              to="/calculator"
               className="w-full h-[52px] border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold rounded-2xl transition-colors duration-200 cursor-pointer flex items-center justify-center"
             >
-              Go Back to Home
+              Back to Calculator
             </Link>
           </div>
         </div>

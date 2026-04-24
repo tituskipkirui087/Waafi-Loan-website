@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useMemo } from "react";
 import type { ReactNode } from "react";
 
+export const FIXED_RATE = 12;
+
 interface LoanData {
   amount: number;
   rate: number;
@@ -25,7 +27,7 @@ const LoanContext = createContext<LoanContextProps | undefined>(undefined);
 export const LoanProvider = ({ children }: { children: ReactNode }) => {
   const [loanData, setLoanDataState] = useState<LoanData>({
     amount: 5000,
-    rate: 8.5,
+    rate: FIXED_RATE,
     duration: 12,
     eligibleAmount: 50000,
   });
@@ -41,7 +43,8 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
 
   const setLoanData = (data: Partial<LoanData>) => {
     setLoanDataState(prev => {
-      const newData = { ...prev, ...data };
+      // Rate is fixed, always use FIXED_RATE
+      const newData = { ...prev, ...data, rate: FIXED_RATE };
       // Ensure amount doesn't exceed eligible amount
       if (data.amount !== undefined) {
         newData.amount = Math.min(data.amount, prev.eligibleAmount);

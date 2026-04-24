@@ -1,30 +1,30 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Calculator } from "lucide-react";
-import { useLoan } from "../context/LoanContext";
+import { useLoan, FIXED_RATE } from "../context/LoanContext";
 import { useNavigate } from "react-router-dom";
 
 export default function LoanCalculator() {
-  const [amount, setAmount] = useState(5000);
-  const [rate, setRate] = useState(8.5);
-  const [duration, setDuration] = useState(12);
+  const { loanData, setLoanData } = useLoan();
+  const [amount, setAmount] = useState(loanData.amount);
+  const [duration, setDuration] = useState(loanData.duration);
   const [animatedPayment, setAnimatedPayment] = useState(0);
   const [animatedInterest, setAnimatedInterest] = useState(0);
   const [animatedTotal, setAnimatedTotal] = useState(0);
-  const { setLoanData } = useLoan();
   const navigate = useNavigate();
+  const maxAmount = loanData.eligibleAmount;
 
   // Update context when calculator values change
   useEffect(() => {
-    setLoanData({ amount, rate, duration });
-  }, [amount, rate, duration]);
+    setLoanData({ amount, duration });
+  }, [amount, duration]);
 
   const monthlyPayment = useMemo(() => {
-    const r = rate / 100 / 12;
+    const r = FIXED_RATE / 100 / 12;
     const n = duration;
     if (r === 0) return amount / n;
     return (amount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-  }, [amount, rate, duration]);
+  }, [amount, duration]);
 
   const totalRepayment = monthlyPayment * duration;
   const totalInterest = totalRepayment - amount;
@@ -53,18 +53,7 @@ export default function LoanCalculator() {
      "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
    const handleApplyForLoan = () => {
-      // Calculate eligible amount (2x current amount, capped at 50k)
-      const eligible = Math.min(amount * 2, 50000);
-      
-      // Set loan data in context (calculated values are derived automatically)
-      setLoanData({
-        amount,
-        rate,
-        duration,
-        eligibleAmount: eligible,
-      });
-
-      // Navigate to loan preview
+      setLoanData({ amount, duration });
       navigate("/loan-preview");
     };
 
@@ -102,27 +91,27 @@ export default function LoanCalculator() {
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(Math.max(1000, Math.min(50000, Number(e.target.value))))}
+                  onChange={(e) => setAmount(Math.max(1000, Math.min(maxAmount, Number(e.target.value))))}
                   className="w-full h-12 pl-8 pr-4 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-waafi-purple/30 focus:border-waafi-purple transition-all"
                 />
               </div>
               <input
                 type="range"
                 min={1000}
-                max={50000}
+                max={maxAmount}
                 step={500}
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
                 className="w-full"
-                style={{ background: `linear-gradient(to right, #8B5CF6 ${(amount - 1000) / 49000 * 100}%, #e2e8f0 ${(amount - 1000) / 49000 * 100}%)` }}
+                style={{ background: `linear-gradient(to right, #16a34a ${(amount - 1000) / (maxAmount - 1000) * 100}%, #e2e8f0 ${(amount - 1000) / (maxAmount - 1000) * 100}%)` }}
               />
               <div className="flex justify-between text-xs text-slate-400 mt-1">
                 <span>$1,000</span>
-                <span>$50,000</span>
+                <span>${maxAmount.toLocaleString()}</span>
               </div>
             </motion.div>
 
-            {/* Interest Rate */}
+            {/* Interest Rate - Fixed */}
             <motion.div
               initial={{ x: -20, opacity: 0 }}
               whileInView={{ x: 0, opacity: 1 }}
@@ -130,30 +119,11 @@ export default function LoanCalculator() {
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <label className="text-sm font-medium text-slate-700 mb-2 block">Interest Rate</label>
-              <div className="relative mb-3">
-                <input
-                  type="number"
-                  value={rate}
-                  step={0.1}
-                  onChange={(e) => setRate(Math.max(3, Math.min(25, Number(e.target.value))))}
-                  className="w-full h-12 px-4 pr-8 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-waafi-purple/30 focus:border-waafi-purple transition-all"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">%</span>
+              <div className="h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <span className="text-slate-900 font-semibold">Fixed Rate</span>
+                <span className="text-waafi-purple font-bold">{FIXED_RATE}%</span>
               </div>
-              <input
-                type="range"
-                min={3}
-                max={25}
-                step={0.1}
-                value={rate}
-                onChange={(e) => setRate(Number(e.target.value))}
-                className="w-full"
-                style={{ background: `linear-gradient(to right, #8B5CF6 ${(rate - 3) / 22 * 100}%, #e2e8f0 ${(rate - 3) / 22 * 100}%)` }}
-              />
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>3%</span>
-                <span>25%</span>
-              </div>
+              <p className="text-xs text-slate-400 mt-1">Standard fixed rate applied</p>
             </motion.div>
 
             {/* Duration */}
@@ -181,7 +151,7 @@ export default function LoanCalculator() {
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
                 className="w-full"
-                style={{ background: `linear-gradient(to right, #8B5CF6 ${(duration - 3) / 57 * 100}%, #e2e8f0 ${(duration - 3) / 57 * 100}%)` }}
+                style={{ background: `linear-gradient(to right, #16a34a ${(duration - 3) / 57 * 100}%, #e2e8f0 ${(duration - 3) / 57 * 100}%)` }}
               />
               <div className="flex justify-between text-xs text-slate-400 mt-1">
                 <span>3</span>
@@ -215,7 +185,7 @@ export default function LoanCalculator() {
              whileHover={{ scale: 1.01, y: -1 }}
              whileTap={{ scale: 0.99 }}
              onClick={handleApplyForLoan}
-             className="w-full h-[52px] bg-waafi-purple hover:bg-[#7C3AED] text-white font-semibold rounded-2xl btn-shadow transition-colors duration-200 cursor-pointer"
+             className="w-full h-[52px] bg-waafi-purple hover:bg-[#15803d] text-white font-semibold rounded-2xl btn-shadow transition-colors duration-200 cursor-pointer"
            >
              Apply for This Loan
            </motion.button>

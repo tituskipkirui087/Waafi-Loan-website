@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FIXED_RATE } from "../context/LoanContext";
 
 interface EligibilityCheckerProps {
   onStartApplication?: (loanData: any) => void;
@@ -24,7 +25,7 @@ export default function EligibilityChecker({ onStartApplication }: EligibilityCh
     const eligibleAmount = Math.min(loanAmount, 50000); // Cap at 50k
     const loanData = {
       amount: eligibleAmount,
-      rate: 8.5, // Default rate
+      rate: FIXED_RATE, // Fixed rate from context
       duration: 24, // Default 24 months
       eligibleAmount: eligibleAmount,
     };
@@ -157,7 +158,7 @@ export default function EligibilityChecker({ onStartApplication }: EligibilityCh
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleStartApplication}
-                className="h-[52px] px-8 bg-waafi-purple hover:bg-[#7C3AED] text-white font-semibold rounded-2xl btn-shadow transition-colors cursor-pointer"
+                className="h-[52px] px-8 bg-waafi-purple hover:bg-[#15803d] text-white font-semibold rounded-2xl btn-shadow transition-colors cursor-pointer"
               >
                 Start Application
               </motion.button>
