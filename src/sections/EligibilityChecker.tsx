@@ -26,7 +26,7 @@ export default function EligibilityChecker({ onStartApplication }: EligibilityCh
     const loanData = {
       amount: eligibleAmount,
       rate: FIXED_RATE, // Fixed rate from context
-      duration: 24, // Default 24 months
+      duration: 12,
       eligibleAmount: eligibleAmount,
     };
 

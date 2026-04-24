@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useMemo } from "react";
 import type { ReactNode } from "react";
 
-export const FIXED_RATE = 12;
+export const FIXED_RATE = 12.5;
 
 interface LoanData {
   amount: number;

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 export default function LoanCalculator() {
   const { loanData, setLoanData } = useLoan();
   const [amount, setAmount] = useState(loanData.amount);
-  const [duration, setDuration] = useState(loanData.duration);
+  const duration = 12;
   const [animatedPayment, setAnimatedPayment] = useState(0);
   const [animatedInterest, setAnimatedInterest] = useState(0);
   const [animatedTotal, setAnimatedTotal] = useState(0);
@@ -126,37 +126,19 @@ export default function LoanCalculator() {
               <p className="text-xs text-slate-400 mt-1">Standard fixed rate applied</p>
             </motion.div>
 
-            {/* Duration */}
+            {/* Duration — fixed at 12 months */}
             <motion.div
               initial={{ x: -20, opacity: 0 }}
               whileInView={{ x: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.3 }}
             >
-              <label className="text-sm font-medium text-slate-700 mb-2 block">Duration (months)</label>
-              <div className="relative mb-3">
-                <input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(Math.max(3, Math.min(60, Number(e.target.value))))}
-                  className="w-full h-12 px-4 pr-20 rounded-xl border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-waafi-purple/30 focus:border-waafi-purple transition-all"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">months</span>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Repayment Period</label>
+              <div className="h-12 px-4 rounded-xl border border-waafi-purple/30 bg-waafi-soft-purple/40 flex items-center justify-between">
+                <span className="font-bold text-waafi-purple text-sm">12 months</span>
+                <span className="text-[11px] text-waafi-purple/70 bg-waafi-purple/10 px-2 py-0.5 rounded-full font-medium">Fixed term</span>
               </div>
-              <input
-                type="range"
-                min={3}
-                max={60}
-                step={1}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full"
-                style={{ background: `linear-gradient(to right, #16a34a ${(duration - 3) / 57 * 100}%, #e2e8f0 ${(duration - 3) / 57 * 100}%)` }}
-              />
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>3</span>
-                <span>60</span>
-              </div>
+              <p className="text-xs text-slate-400 mt-1">All WAAFI loans are on a standard 12-month term</p>
             </motion.div>
           </div>
 
