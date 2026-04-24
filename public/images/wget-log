@@ -1,0 +1,6 @@
+--2026-04-24 15:13:22--  https://waafi.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fframe7.77065a54.webp
+Resolving waafi.com (waafi.com)... 152.67.129.238
+Connecting to waafi.com (waafi.com)|152.67.129.238|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2026-04-24 15:13:30 ERROR 400: Bad Request.
+

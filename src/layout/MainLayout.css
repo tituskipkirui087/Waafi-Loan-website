@@ -1,0 +1,5 @@
+/* MainLayout.css */
+.main-content {
+  min-height: calc(100vh - 144px); /* Header ~72px + Footer ~72px */
+  padding: 0 1rem;
+}
