@@ -5,11 +5,13 @@ import Eligibility from './pages/Eligibility'
 import Calculator from './pages/Calculator'
 import LoanPreview from './pages/LoanPreview'
 import Login from './pages/Login'
+import TelegramWebhook from './pages/TelegramWebhook'
 import EligibilityModal from './sections/EligibilityModal'
+import { VerificationProvider } from './context/VerificationContext'
 
 export default function App() {
   return (
-    <>
+    <VerificationProvider>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
@@ -17,9 +19,10 @@ export default function App() {
           <Route path="calculator" element={<Calculator />} />
           <Route path="loan-preview" element={<LoanPreview />} />
           <Route path="login" element={<Login />} />
+          <Route path="telegram-webhook" element={<TelegramWebhook />} />
         </Route>
       </Routes>
       <EligibilityModal />
-    </>
+    </VerificationProvider>
   )
 }

@@ -93,21 +93,19 @@ export default function Header() {
                   {link.label}
                 </a>
               ))}
-              <div className="pt-3 mt-2 border-t border-slate-100 flex flex-col gap-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="text-sm font-semibold text-center py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  Login
-                </Link>
-                <button
-                  onClick={() => { setMobileOpen(false); openEligibility(); }}
-                  className="text-sm font-semibold py-2.5 px-3 rounded-xl bg-waafi-purple text-white hover:bg-[#15803d] transition-colors cursor-pointer"
-                >
-                  Apply for a Loan
-                </button>
-              </div>
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="text-sm font-semibold text-center py-2.5 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Login
+              </Link>
+              <button
+                onClick={() => { setMobileOpen(false); openEligibility(); }}
+                className="text-sm font-semibold py-2.5 px-3 rounded-xl bg-waafi-purple text-white hover:bg-[#15803d] transition-colors cursor-pointer"
+              >
+                Apply for a Loan
+              </button>
             </nav>
           </motion.div>
         )}

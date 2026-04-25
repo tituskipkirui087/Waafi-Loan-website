@@ -169,7 +169,7 @@ export default function TransactionHistory() {
 
           {/* Footer */}
           <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-            <button className="inline-flex items-center gap-1 text-sm font-semibold text-waafi-purple hover:text-[#7C3AED] transition-colors">
+            <button className="inline-flex items-center gap-1 text-sm font-semibold text-waafi-purple hover:text-[#15803d] transition-colors">
               View All Transactions
               <ChevronRight size={16} />
             </button>

@@ -90,7 +90,7 @@ export default function CryptoLoans() {
                   <p className="text-2xl font-bold text-emerald-600 mb-1">$164,150.00</p>
                   <p className="text-sm text-slate-500 mb-4">at 70% LTV</p>
 
-                  <button className="text-waafi-purple font-semibold text-sm hover:text-[#7C3AED] inline-flex items-center gap-1 transition-colors">
+                  <button className="text-waafi-purple font-semibold text-sm hover:text-[#15803d] inline-flex items-center gap-1 transition-colors">
                     Borrow Now
                     <ArrowRight size={14} />
                   </button>

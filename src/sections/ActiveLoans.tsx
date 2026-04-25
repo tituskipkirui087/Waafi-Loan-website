@@ -74,7 +74,7 @@ export default function ActiveLoans() {
           <div className="lg:w-[60%]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-slate-900">Your Active Loans</h3>
-              <a href="#" className="text-sm font-medium text-waafi-purple hover:text-[#7C3AED]">
+              <a href="#" className="text-sm font-medium text-waafi-purple hover:text-[#15803d]">
                 View All
               </a>
             </div>

