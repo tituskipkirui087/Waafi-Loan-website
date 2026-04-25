@@ -102,15 +102,15 @@ export default function StatsBar() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="relative bg-slate-50 rounded-2xl border border-slate-100 p-4 overflow-hidden group hover:border-slate-200 transition-colors"
+              className="relative bg-slate-50 rounded-2xl border border-slate-100 p-3 sm:p-4 overflow-hidden group hover:border-slate-200 transition-colors"
             >
               <div className={`absolute top-0 left-0 w-full h-[3px] ${stat.accentBar} rounded-t-2xl`} />
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 ${stat.iconBg} rounded-xl flex items-center justify-center shrink-0`}>
-                  <stat.Icon size={16} className={stat.iconColor} />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 ${stat.iconBg} rounded-xl flex items-center justify-center shrink-0`}>
+                  <stat.Icon size={15} className={stat.iconColor} />
                 </div>
                 <div>
-                  <p className={`text-xl font-extrabold ${stat.numColor} leading-none mb-0.5`}>
+                  <p className={`text-lg sm:text-xl font-extrabold ${stat.numColor} leading-none mb-0.5`}>
                     <CountUp end={stat.end} prefix={stat.prefix} suffix={stat.suffix} />
                   </p>
                   <p className="text-slate-500 text-[11px] leading-tight">{stat.label}</p>

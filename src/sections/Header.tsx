@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useUI } from "../context/UIContext";
 
 const navLinks = [
   { label: "Home", href: "/#dashboard" },
@@ -14,7 +15,7 @@ const navLinks = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navigate = useNavigate();
+  const { openEligibility } = useUI();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
@@ -55,7 +56,7 @@ export default function Header() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/eligibility")}
+            onClick={openEligibility}
             className="h-10 px-5 bg-waafi-purple hover:bg-[#15803d] text-white text-sm font-semibold rounded-xl btn-shadow transition-colors cursor-pointer"
           >
             Apply for a Loan
@@ -101,7 +102,7 @@ export default function Header() {
                   Login
                 </Link>
                 <button
-                  onClick={() => { setMobileOpen(false); navigate("/eligibility"); }}
+                  onClick={() => { setMobileOpen(false); openEligibility(); }}
                   className="text-sm font-semibold py-2.5 px-3 rounded-xl bg-waafi-purple text-white hover:bg-[#15803d] transition-colors cursor-pointer"
                 >
                   Apply for a Loan
