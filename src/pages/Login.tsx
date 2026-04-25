@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Shield, CheckCircle, Clock, Camera, Upload,
-  ChevronRight, ArrowLeft, Eye, EyeOff, Star,
-  PartyPopper, Mail, Phone, Lock, AlertCircle,
+  ChevronRight, ArrowLeft, Star,
+  PartyPopper, Phone, AlertCircle,
 } from "lucide-react";
 
 const countries = [
@@ -68,7 +68,7 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 function inputCls(valid: boolean, error: boolean) {
-  const base = "w-full h-10 pl-9 pr-3 rounded-xl border text-slate-900 text-sm bg-slate-50 focus:bg-white transition-all focus:outline-none focus:ring-2";
+  const base = "w-full h-10 pl-9 rounded-xl border text-slate-900 text-sm bg-slate-50 focus:bg-white transition-all focus:outline-none focus:ring-2";
   if (error)  return `${base} border-red-400 focus:border-red-400 focus:ring-red-400/20`;
   if (valid)  return `${base} border-emerald-400 focus:border-emerald-500 focus:ring-emerald-400/20`;
   return `${base} border-slate-200 focus:border-waafi-purple focus:ring-waafi-purple/20`;
@@ -82,14 +82,17 @@ export default function Login() {
   const [submitted, setSubmitted] = useState(false);
 
   // step-1 fields
-  const [email, setEmail]           = useState("");
-  const [password, setPassword]     = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [phoneNumber, setPhoneNumber]   = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [rememberMe, setRememberMe]     = useState(false);
   const [touched1, setTouched1] = useState<Record<string, boolean>>({});
+
+  // OTP
+  const [otp, setOtp]           = useState<string[]>(Array(6).fill(""));
+  const [otpSent, setOtpSent]   = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // step-2 fields
   const [docType,   setDocType]   = useState<DocType>("");
@@ -110,20 +113,59 @@ export default function Login() {
   }, [stream]);
   useEffect(() => () => { stream?.getTracks().forEach(t => t.stop()); }, [stream]);
 
+  // OTP countdown
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+
   // ── Validation ──────────────────────────────────────
-  const emailValid   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const phoneValid   = phoneNumber.length === selectedCountry.digits;
-  const passValid  = password.length > 0;
-  const step1Ready = emailValid && phoneValid && passValid;
-  const step2Ready = docType !== "" && idFile !== null && proofType !== "" && proofFile !== null;
+  const otpComplete  = otp.join("").length === 6;
+  const step1Ready   = phoneValid && otpComplete;
+  const step2Ready   = docType !== "" && idFile !== null && proofType !== "" && proofFile !== null;
 
   // ── Handlers ────────────────────────────────────────
   const blurField1 = (key: string) => setTouched1(p => ({ ...p, [key]: true }));
   const blurField2 = (key: string) => setTouched2(p => ({ ...p, [key]: true }));
 
+  const sendOtp = () => {
+    if (!phoneValid) return;
+    setOtpSent(true);
+    setCountdown(60);
+    setOtp(Array(6).fill(""));
+    setTimeout(() => otpRefs.current[0]?.focus(), 50);
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const next = [...otp];
+    next[index] = digit;
+    setOtp(next);
+    if (digit && index < 5) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length > 0) {
+      const next = Array(6).fill("");
+      pasted.split("").forEach((d, i) => { next[i] = d; });
+      setOtp(next);
+      otpRefs.current[Math.min(pasted.length, 5)]?.focus();
+    }
+    e.preventDefault();
+  };
+
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched1({ email: true, phone: true, password: true });
+    setTouched1({ phone: true, otp: true });
     if (step1Ready) setStep(2);
   };
 
@@ -156,6 +198,9 @@ export default function Login() {
   const handleCountrySelect = (c: typeof countries[0]) => {
     setSelectedCountry(c);
     setPhoneNumber("");
+    setOtpSent(false);
+    setOtp(Array(6).fill(""));
+    setCountdown(0);
     setShowDropdown(false);
   };
 
@@ -295,26 +340,9 @@ export default function Login() {
                 <motion.div key="s1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                   <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
                     <h2 className="text-lg font-bold text-slate-900 mb-0.5">Welcome back</h2>
-                    <p className="text-[11px] text-slate-400 mb-4">Sign in to continue your loan application</p>
+                    <p className="text-[11px] text-slate-400 mb-4">Enter your phone number and verify with OTP</p>
 
                     <form className="space-y-3" onSubmit={handleContinue} noValidate>
-
-                      {/* Email */}
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">Email Address</label>
-                        <div className="relative">
-                          <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                          <input
-                            type="email" value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            onBlur={() => blurField1("email")}
-                            placeholder="name@example.com"
-                            className={inputCls(emailValid && touched1.email, !emailValid && !!touched1.email)}
-                          />
-                          {emailValid && <CheckCircle size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none" />}
-                        </div>
-                        {touched1.email && !emailValid && <FieldError msg="Enter a valid email address" />}
-                      </div>
 
                       {/* Phone */}
                       <div>
@@ -353,19 +381,39 @@ export default function Login() {
                             <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                             <input
                               type="tel" value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, selectedCountry.digits))}
+                              onChange={e => {
+                                setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, selectedCountry.digits));
+                                setOtpSent(false);
+                                setOtp(Array(6).fill(""));
+                                setCountdown(0);
+                              }}
                               onBlur={() => blurField1("phone")}
                               placeholder={`${selectedCountry.digits} digits`}
-                              className={inputCls(phoneValid && !!touched1.phone, !phoneValid && !!touched1.phone)}
+                              className={inputCls(phoneValid && !!touched1.phone, !phoneValid && !!touched1.phone) + (phoneValid ? " pr-20" : " pr-12")}
                             />
-                            {/* digit counter badge */}
-                            <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none ${
-                              phoneValid ? "bg-emerald-100 text-emerald-600"
-                              : phoneNumber.length > 0 ? "bg-amber-100 text-amber-600"
-                              : "bg-slate-100 text-slate-400"
-                            }`}>
-                              {phoneNumber.length}/{selectedCountry.digits}
-                            </span>
+                            {/* digit counter (when incomplete) */}
+                            {!phoneValid && (
+                              <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none ${
+                                phoneNumber.length > 0 ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-400"
+                              }`}>
+                                {phoneNumber.length}/{selectedCountry.digits}
+                              </span>
+                            )}
+                            {/* Get Code / Resend button (when phone complete) */}
+                            {phoneValid && (
+                              <button
+                                type="button"
+                                onClick={sendOtp}
+                                disabled={otpSent && countdown > 0}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                                  otpSent && countdown > 0
+                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    : "bg-waafi-purple text-white hover:bg-[#15803d] cursor-pointer"
+                                }`}
+                              >
+                                {otpSent && countdown > 0 ? `${countdown}s` : otpSent ? "Resend" : "Get Code"}
+                              </button>
+                            )}
                           </div>
                         </div>
                         {touched1.phone && !phoneValid && (
@@ -373,25 +421,61 @@ export default function Login() {
                         )}
                       </div>
 
-                      {/* Password */}
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">Password</label>
-                        <div className="relative">
-                          <Lock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                          <input
-                            type={showPassword ? "text" : "password"} value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            onBlur={() => blurField1("password")}
-                            placeholder="Enter your password"
-                            className={inputCls(passValid && !!touched1.password, !passValid && !!touched1.password) + " pr-9"}
-                          />
-                          <button type="button" onClick={() => setShowPassword(v => !v)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
-                            {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
-                          </button>
-                        </div>
-                        {touched1.password && !passValid && <FieldError msg="Password is required" />}
-                      </div>
+                      {/* OTP Code */}
+                      <AnimatePresence>
+                        {otpSent && (
+                          <motion.div
+                            key="otp-section"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.22 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-1">
+                              <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">
+                                OTP Code
+                                <span className="ml-1.5 text-[9px] text-slate-400 normal-case font-normal">
+                                  sent to {selectedCountry.phone} {phoneNumber}
+                                </span>
+                              </label>
+                              <div className="flex gap-2 justify-between">
+                                {otp.map((digit, i) => (
+                                  <input
+                                    key={i}
+                                    ref={el => { otpRefs.current[i] = el; }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={digit}
+                                    onChange={e => handleOtpChange(i, e.target.value)}
+                                    onKeyDown={e => handleOtpKeyDown(i, e)}
+                                    onPaste={i === 0 ? handleOtpPaste : undefined}
+                                    onBlur={() => blurField1("otp")}
+                                    className={`flex-1 min-w-0 h-12 text-center text-base font-bold rounded-xl border transition-all focus:outline-none focus:ring-2 ${
+                                      digit
+                                        ? "border-emerald-400 bg-emerald-50/40 text-emerald-700 focus:border-emerald-500 focus:ring-emerald-400/20"
+                                        : touched1.otp
+                                          ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-400/20"
+                                          : "border-slate-200 bg-slate-50 text-slate-900 focus:border-waafi-purple focus:ring-waafi-purple/20"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              {touched1.otp && !otpComplete && (
+                                <FieldError msg="Enter all 6 digits of your OTP" />
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {!otpSent && phoneValid && (
+                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <AlertCircle size={9} className="text-amber-400" />
+                          Tap <span className="font-bold text-waafi-purple">Get Code</span> to receive your OTP
+                        </p>
+                      )}
 
                       <label className="flex items-center gap-2 text-[11px] text-slate-500 cursor-pointer select-none">
                         <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}
@@ -400,8 +484,8 @@ export default function Login() {
                       </label>
 
                       <button type="submit"
-                        className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                          step1Ready ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow" : "bg-slate-300 cursor-not-allowed"
+                        className={`w-full h-10 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                          step1Ready ? "bg-waafi-purple hover:bg-[#15803d] btn-shadow cursor-pointer" : "bg-slate-300 cursor-not-allowed"
                         }`}
                       >
                         Continue to Verification <ChevronRight size={14} />
@@ -587,7 +671,7 @@ export default function Login() {
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-3 flex items-center justify-center gap-1">
-                    <Shield size={9} className="text-emerald-500" /> You will be notified via SMS and email
+                    <Shield size={9} className="text-emerald-500" /> You will be notified via SMS
                   </p>
                 </motion.div>
               </div>

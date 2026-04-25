@@ -17,8 +17,8 @@ export default function HeroDashboard() {
         <img src="/images/exp-wallpaper.svg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-[0.05]" />
       </div>
 
-      <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-12 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+      <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 py-3 sm:py-12 w-full">
+        <div className="grid lg:grid-cols-2 gap-3 lg:gap-10 items-center">
 
           {/* ── Left ── */}
           <motion.div
@@ -28,48 +28,47 @@ export default function HeroDashboard() {
             {/* Live badge */}
             <motion.div
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 mb-4 sm:mb-5"
+              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 mb-2 sm:mb-5"
             >
               <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-white/90 text-xs font-medium">Now serving 54+ countries worldwide</span>
+              <span className="text-white/90 text-[11px] sm:text-xs font-medium">Now serving 54+ countries worldwide</span>
             </motion.div>
 
             {/* Headline */}
-            <h1 className="text-[1.75rem] sm:text-4xl lg:text-5xl font-extrabold text-white leading-[1.15] mb-3 sm:mb-4">
-              Get Fast,<br />
+            <h1 className="text-[1.35rem] sm:text-4xl lg:text-5xl font-extrabold text-white leading-[1.15] mb-1.5 sm:mb-4">
+              Get Fast,{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ade80] to-[#2dd4bf]">
                 Flexible Loans
-              </span>
-              <br />
+              </span>{" "}
               with WAAFI
             </h1>
 
             {/* Description */}
-            <p className="text-sm sm:text-base text-white/65 mb-5 sm:mb-6 leading-relaxed max-w-[440px] mx-auto sm:mx-0">
+            <p className="text-xs sm:text-base text-white/65 mb-3 sm:mb-6 leading-relaxed max-w-[440px] mx-auto sm:mx-0">
               Access up to <span className="text-white font-semibold">$50,000</span> in minutes.
               Low fixed rates, instant approval, and flexible repayment terms.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mb-5 sm:mb-7">
+            <div className="flex flex-row gap-2 sm:gap-3 mb-3 sm:mb-7">
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={openEligibility}
-                className="h-11 px-6 bg-waafi-purple hover:bg-[#15803d] text-white font-semibold rounded-xl btn-shadow transition-colors cursor-pointer text-sm w-full sm:w-auto"
+                className="h-9 sm:h-11 px-4 sm:px-6 bg-waafi-purple hover:bg-[#15803d] text-white font-semibold rounded-xl btn-shadow transition-colors cursor-pointer text-xs sm:text-sm flex-1 sm:flex-none"
               >
                 Apply Now — It's Free
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={openEligibility}
-                className="h-11 px-6 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold rounded-xl transition-colors cursor-pointer text-sm backdrop-blur-sm w-full sm:w-auto"
+                className="h-9 sm:h-11 px-4 sm:px-6 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold rounded-xl transition-colors cursor-pointer text-xs sm:text-sm backdrop-blur-sm flex-1 sm:flex-none"
               >
                 Check Eligibility
               </motion.button>
             </div>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-5 justify-center sm:justify-start">
+            {/* Trust badges — hidden on mobile */}
+            <div className="hidden sm:flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-5 justify-center sm:justify-start">
               {[
                 { Icon: Shield,      color: "text-emerald-400", label: "Bank-Level Security" },
                 { Icon: Clock,       color: "text-waafi-teal",  label: "Instant Approval"   },
@@ -82,8 +81,8 @@ export default function HeroDashboard() {
               ))}
             </div>
 
-            {/* Star rating */}
-            <div className="flex items-center gap-2 justify-center sm:justify-start">
+            {/* Star rating — hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-2 justify-center sm:justify-start">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
